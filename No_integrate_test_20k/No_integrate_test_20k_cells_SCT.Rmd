@@ -1,0 +1,137 @@
+```{r, warning=FALSE}
+library(Seurat)
+library(SeuratObject)
+library(dplyr)
+```
+
+### load seurat object
+```{r}
+human_exc <- readRDS('/restricted/projectnb/czproj/Projects/2025_CrossSpecies/SNSM_ROSMAP/Entorhinal_cortex.rds')
+mouse_exc <- readRDS('/restricted/projectnb/czproj/Projects/2025_CrossSpecies/SNSM_ROSMAP/snsm_orthologs_SCT.rds')
+mouse_exc_anno <- readRDS('/restricted/projectnb/czproj/Projects/2025_CrossSpecies/SNSM_ROSMAP/snsm_SCT_annotated.rds')
+```
+
+### add cell_type to mouse_exc
+```{r}
+mouse_exc$cell_type <- mouse_exc_anno@meta.data$cell_type
+```
+
+### change metadata column names
+```{r}
+colnames(human_exc@meta.data)[colnames(human_exc@meta.data) == "projid"] <- "sample_id"
+colnames(human_exc@meta.data)[colnames(human_exc@meta.data) == "major_cell_type"] <- "cell_type"
+colnames(mouse_exc@meta.data)[colnames(mouse_exc@meta.data) == "orig.ident"] <- "sample_id"
+```
+
+### change cell tpye name in human data set
+```{r}
+table(human_exc$cell_type)
+```
+
+```{r}
+table(mouse_exc$cell_type)
+```
+
+```{r}
+human_exc$cell_type <- recode(human_exc$cell_type,
+                                  "Ast" = "Astrocytes",
+                                  "End" = "Endothelial_cells",
+                                  "Exc" = "Excitatory_neurons",
+                                  "Fib" = "Fibroblasts",
+                                  "Inh" = "Inhibitary_neurons",
+                                  "Mic" = "Microglia",
+                                  "Oli" = "Oligodendrocytes",
+                                  "OPC" = "OPCs",
+                                  "Per" = "Pericytes")
+```
+
+### merge seurat objects
+```{r}
+mouse_exc$species <- "mouse"
+human_exc$species <- "human"
+
+merged <- merge(human_exc, y = mouse_exc)
+```
+
+### subset
+```{r}
+merged_subset <- subset(merged, subset = sample_id %in% c(50400709, 76733461, 94430339, 50410319, "SNS2-2", "SNS3_1", "SNS3_2", "SNS3_4"))
+```
+
+###### TODO
+### SCT
+```{r}
+DefaultAssay(merged_subset) <- "RNA"
+merged_list <- SplitObject(merged_subset, split.by = "sample_id")
+```
+
+```{r}
+merged_list <- lapply(
+  merged_list,
+  function(obj) {
+    obj <- SCTransform(obj, assay = 'RNA',verbose = FALSE)
+    obj[["SCT"]] <- obj@assays$SCT
+    return(obj)
+  }
+)
+```
+
+### visualization
+```{r}
+# Merge — set SCT assay explicitly before merging
+for (i in 1:length(merged_list)) {
+  DefaultAssay(merged_list[[i]]) <- "SCT"
+}
+
+# Merge all objects
+seurat_merged <- merge(merged_list[[1]], y = merged_list[-1])
+
+# Now set SCT as default assay
+DefaultAssay(seurat_merged) <- "SCT"
+
+# Variable features
+seurat_merged <- FindVariableFeatures(seurat_merged)
+
+# PCA
+seurat_merged <- RunPCA(seurat_merged)
+
+# UMAP
+seurat_merged <- RunUMAP(seurat_merged, dims = 1:30)
+```
+
+```{r}
+p <- DimPlot(seurat_merged, reduction = "umap", group.by = "species")
+
+ggsave(
+    filename = "SCT_No_Integration_20k/UMAP_split_species.png",
+    plot = p,
+    width = 6,
+    height = 5,
+    dpi = 300
+  )
+```
+```{r}
+p <- DimPlot(seurat_merged, reduction = "umap", group.by = "cell_type")
+
+ggsave(
+    filename = "SCT_No_Integration_20k/UMAP_split_cell_type.png",
+    plot = p,
+    width = 8,
+    height = 5,
+    dpi = 300
+  )
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

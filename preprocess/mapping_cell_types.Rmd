@@ -1,0 +1,113 @@
+```{r, warning=FALSE}
+library(Seurat)
+library(SeuratObject)
+library(sctransform)
+library(dplyr)
+library(ggplot2)
+library(patchwork)
+library(harmony)
+```
+
+### load dataset
+```{r}
+harmony <- readRDS('/restricted/projectnb/czproj/A00/jlhan/mouse_human_integrated/SCT_Harmony_20k/20k_SCT_Harmony.rds')
+```
+
+```{r}
+integratedata <- readRDS('/restricted/projectnb/czproj/A00/jlhan/mouse_human_integrated/SCT_IntegrateData_20k/20k_SCT_IntegrateData.rds')
+```
+
+### cell type mapping
+```{r}
+harmony$cell_type <- ifelse(
+  harmony$dataset == "human", 
+  recode(harmony$major_cell_type,
+         "Ast" = "Astrocytes",
+         "End" = "Endothelial_cells",
+         "Exc" = "Excitatory_neurons",
+         "Fib" = "Fibroblasts",
+         "Inh" = "Inhibitary_neurons",
+         "Mic" = "Microglia",
+         "Oli" = "Oligodendrocytes",
+         "OPC" = "OPCs",
+         "Per" = "Pericytes",
+         .default = harmony$major_cell_type
+  ),
+  harmony$cell_type  # If mouse, keep existing cell_type unchanged
+)
+```
+
+```{r}
+integratedata$cell_type <- ifelse(
+  integratedata$dataset == "human", 
+  recode(integratedata$major_cell_type,
+         "Ast" = "Astrocytes",
+         "End" = "Endothelial_cells",
+         "Exc" = "Excitatory_neurons",
+         "Fib" = "Fibroblasts",
+         "Inh" = "Inhibitary_neurons",
+         "Mic" = "Microglia",
+         "Oli" = "Oligodendrocytes",
+         "OPC" = "OPCs",
+         "Per" = "Pericytes",
+         .default = integratedata$major_cell_type
+  ),
+  integratedata$cell_type  # If mouse, keep existing cell_type unchanged
+)
+```
+
+
+### visualize
+```{r}
+p <- DimPlot(harmony, reduction = "umap", group.by = 'dataset')
+
+ggsave(
+    filename = "SCT_Harmony_20k/UMAP_species.png",
+    plot = p,
+    width = 6,
+    height = 5,
+    dpi = 300
+  )
+```
+
+```{r}
+p <- DimPlot(harmony, reduction = "umap", group.by = 'cell_type')
+
+ggsave(
+    filename = "SCT_Harmony_20k/UMAP_cell_type.png",
+    plot = p,
+    width = 8,
+    height = 5,
+    dpi = 300
+  )
+```
+
+```{r}
+p <- DimPlot(integratedata, reduction = "umap", group.by = 'dataset')
+
+ggsave(
+    filename = "SCT_IntegrateData_20k/UMAP_species.png",
+    plot = p,
+    width = 6,
+    height = 5,
+    dpi = 300
+  )
+```
+
+```{r}
+p <- DimPlot(integratedata, reduction = "umap", group.by = 'cell_type')
+
+ggsave(
+    filename = "SCT_IntegrateData_20k/UMAP_cell_type.png",
+    plot = p,
+    width = 8,
+    height = 5,
+    dpi = 300
+  )
+```
+
+
+
+
+
+

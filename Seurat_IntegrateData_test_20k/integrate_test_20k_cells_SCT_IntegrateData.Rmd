@@ -1,0 +1,134 @@
+```{r, warning=FALSE}
+library(Seurat)
+library(SeuratObject)
+library(sctransform)
+library(dplyr)
+library(ggplot2)
+library(patchwork)
+library(harmony)
+```
+
+### load dataset
+```{r}
+merged_obj <- readRDS('20k_merged.rds')
+```
+
+### split by sampleID (WHY???)
+```{r}
+merged_list <- SplitObject(merged_obj, split.by = "sampleID")
+```
+
+### normalization 
+
+#### by SCT
+```{r}
+merged_list <- lapply(
+  merged_list,
+  function(obj) {
+    obj <- SCTransform(obj, assay = 'RNA',vars.to.regress = "nFeature_RNA")
+    obj[["SCT"]] <- obj@assays$SCT
+    return(obj)
+  }
+)
+```
+
+### prepare for integration
+```{r}
+features <- SelectIntegrationFeatures(merged_list)
+merged_list <- PrepSCTIntegration(merged_list, anchor.features = features)
+```
+```{r}
+anchors <- FindIntegrationAnchors(
+  object.list        = merged_list, 
+  normalization.method = "SCT",
+  anchor.features    = features
+)
+
+combined_integrated <- IntegrateData(anchorset = anchors, normalization.method = "SCT")
+```
+
+
+### integration
+```{r}
+DefaultAssay(combined_integrated) <- "integrated"
+
+combined_integrated <- RunPCA(combined_integrated)
+combined_integrated <- RunUMAP(combined_integrated, dims = 1:30)
+```
+### Visualization
+
+```{r}
+# Split into a list of Seurat objects, one per sample
+seurat_list <- SplitObject(combined_integrated, split.by = "sampleID")
+
+# Save plots to PNG files
+for (id in names(seurat_list)) {
+  p <- DimPlot(seurat_list[[id]], reduction = "umap", group.by = 'sampleID') + ggtitle(id)
+  ggsave(
+    filename = paste0("SCT_IntegrateData_20k/UMAP_", id, ".png"),
+    plot = p,
+    width = 6,
+    height = 5,
+    dpi = 300
+  )
+}
+```
+
+```{r}
+p <- DimPlot(combined_integrated, reduction = "umap", group.by = 'dataset')
+
+ggsave(
+    filename = "SCT_IntegrateData_20k/UMAP_dataset.png",
+    plot = p,
+    width = 6,
+    height = 5,
+    dpi = 300
+  )
+```
+
+```{r}
+p <- DimPlot(combined_integrated, reduction = "umap", group.by = 'dataset',split.by = 'dataset')
+
+ggsave(
+    filename = "SCT_IntegrateData_20k/UMAP_split_dataset.png",
+    plot = p,
+    width = 6,
+    height = 5,
+    dpi = 300
+  )
+```
+
+```{r}
+# Split Seurat objects into two species
+seurat_list <- SplitObject(combined_integrated, split.by = "dataset")
+```
+
+```{r}
+p <- DimPlot(seurat_list[[1]], reduction = "umap", group.by = 'cell_type')
+
+ggsave(
+    filename = "SCT_IntegrateData_20k/UMAP_mouse.png",
+    plot = p,
+    width = 8,
+    height = 5,
+    dpi = 300
+  )
+```
+
+```{r}
+p <- DimPlot(seurat_list[[2]], reduction = "umap", group.by = 'major_cell_type')
+
+ggsave(
+    filename = "SCT_IntegrateData_20k/UMAP_human.png",
+    plot = p,
+    width = 6,
+    height = 5,
+    dpi = 300
+  )
+```
+
+
+
+
+
+

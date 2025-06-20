@@ -1,0 +1,180 @@
+```{r, warning=FALSE}
+library(Seurat)
+library(SeuratObject)
+```
+
+### load seurat object
+```{r}
+human_exc <- readRDS('/restricted/projectnb/czproj/Projects/2025_CrossSpecies/SNSM_ROSMAP/Entorhinal_cortex.rds')
+mouse_exc_anno <- readRDS('/restricted/projectnb/czproj/Projects/2025_CrossSpecies/SNSM_ROSMAP/snsm_SCT_annotated.rds')
+```
+
+
+### metadata
+```{r}
+meta <- mouse_exc_anno@meta.data
+```
+
+```{r}
+write.table(
+  meta,
+  file = "conversion_files/metadata.tsv",
+  sep = "\t", quote = FALSE, row.names = TRUE
+)
+```
+
+
+## SNS2-2
+```{r}
+counts <- as(Matrix::Matrix(LayerData(mouse_exc_anno[["RNA"]], layer = "counts.SNS2-2"), sparse = TRUE), "dgCMatrix")
+```
+
+### count matrix
+```{r}
+Matrix::writeMM(counts, file = "conversion_files/counts_SNS2-2.mtx")
+```
+
+### gene names
+```{r}
+write.table(
+  rownames(counts),
+  file = "conversion_files/features_SNS2-2.tsv",
+  quote = FALSE, row.names = FALSE, col.names = FALSE
+)
+```
+
+### cell barcodes
+```{r}
+write.table(
+  colnames(counts),
+  file = "conversion_files/barcodes_SNS2-2.tsv",
+  quote = FALSE, row.names = FALSE, col.names = FALSE
+)
+```
+
+## SNS3_1
+```{r}
+counts <- as(Matrix::Matrix(LayerData(mouse_exc_anno[["RNA"]], layer = "counts.SNS3_1"), sparse = TRUE), "dgCMatrix")
+```
+
+### count matrix
+```{r}
+Matrix::writeMM(counts, file = "conversion_files/counts_SNS3_1.mtx")
+```
+
+### gene names
+```{r}
+write.table(
+  rownames(counts),
+  file = "conversion_files/features_SNS3_1.tsv",
+  quote = FALSE, row.names = FALSE, col.names = FALSE
+)
+```
+
+### cell barcodes
+```{r}
+write.table(
+  colnames(counts),
+  file = "conversion_files/barcodes_SNS3_1.tsv",
+  quote = FALSE, row.names = FALSE, col.names = FALSE
+)
+```
+
+
+## SNS3_4
+```{r}
+counts <- as(Matrix::Matrix(LayerData(mouse_exc_anno[["RNA"]], layer = "counts.SNS3_4"), sparse = TRUE), "dgCMatrix")
+```
+
+### count matrix
+```{r}
+Matrix::writeMM(counts, file = "conversion_files/counts_SNS3_4.mtx")
+```
+
+### gene names
+```{r}
+write.table(
+  rownames(counts),
+  file = "conversion_files/features_SNS3_4.tsv",
+  quote = FALSE, row.names = FALSE, col.names = FALSE
+)
+```
+
+### cell barcodes
+```{r}
+write.table(
+  colnames(counts),
+  file = "conversion_files/barcodes_SNS3_4.tsv",
+  quote = FALSE, row.names = FALSE, col.names = FALSE
+)
+```
+
+
+## SNS3_2
+```{r}
+counts <- as(Matrix::Matrix(LayerData(mouse_exc_anno[["RNA"]], layer = "counts.SNS3_2"), sparse = TRUE), "dgCMatrix")
+```
+
+### count matrix
+```{r}
+Matrix::writeMM(counts, file = "conversion_files/counts_SNS3_2.mtx")
+```
+
+### gene names
+```{r}
+write.table(
+  rownames(counts),
+  file = "conversion_files/features_SNS3_2.tsv",
+  quote = FALSE, row.names = FALSE, col.names = FALSE
+)
+```
+
+### cell barcodes
+```{r}
+write.table(
+  colnames(counts),
+  file = "conversion_files/barcodes_SNS3_2.tsv",
+  quote = FALSE, row.names = FALSE, col.names = FALSE
+)
+```
+
+## human
+```{r}
+counts <- as(Matrix::Matrix(LayerData(human_exc[["RNA"]], layer = "counts"), sparse = TRUE), "dgCMatrix")
+```
+
+### count matrix
+```{r}
+Matrix::writeMM(counts, file = "conversion_files/counts_human.mtx")
+```
+
+### gene names
+```{r}
+write.table(
+  rownames(counts),
+  file = "conversion_files/features_human.tsv",
+  quote = FALSE, row.names = FALSE, col.names = FALSE
+)
+```
+
+### cell barcodes
+```{r}
+write.table(
+  colnames(counts),
+  file = "conversion_files/barcodes_human.tsv",
+  quote = FALSE, row.names = FALSE, col.names = FALSE
+)
+```
+
+```{r}
+meta <- human_exc@meta.data
+```
+
+### metadata
+```{r}
+write.table(
+  meta,
+  file = "conversion_files/metadata_human.tsv",
+  sep = "\t", quote = FALSE, row.names = TRUE
+)
+```
